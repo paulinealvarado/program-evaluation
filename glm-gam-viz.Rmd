@@ -1,0 +1,237 @@
+---
+title: "Visualizing Generalized Linear Models and Generalized Additive Models"
+author: "Pauline I. Alvarado"
+date: "Spring 2018"
+output: pdf_document
+---
+
+This coding exercise was from the Program Evaluation and Data Analysis course taught by Dr. Nelson Lim at the University of Pennsylvania. Data was provided by the instructor.
+
+# Data Management
+## Load data and packages
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  library(tidyverse)
+  library(ggplot2)
+  library(readstata13)
+  library(modelr)
+
+  acs <- read.dta13("acsphillylaborforce.dta")
+
+```
+
+
+
+## Create duplicate viarables for better graphic & summary tables
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  acs <- acs %>% rename(Race = raceth,
+                        Sex  = sex,
+                        Education = educ_year,
+                        Degree = education,
+                        Occupation = gen_occ,
+                        Industry = ind_cat5,
+                        Income = incwage,
+                        Managers = leader_cat,
+                        Age = age,
+                        College_major = major1,
+                        Marital_status = marst) %>% 
+                 mutate(Age = as.numeric(Age),
+                        Age_sq = Age*Age,
+                        Education11 = case_when((Education < 11) ~ 0,
+                                                (Education >= 11) ~ Education - 11),
+                        Education16 = case_when((Education < 16) ~ 0,
+                                                (Education >= 16) ~ Education - 16))
+
+```
+
+
+
+# Generalized Linear Models
+## Create linear models
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  # NOTE: family = gaussian (normal distribution)
+
+  fit1 <- glm(Income ~ Sex, family = gaussian(link = identity), data=acs)
+
+  
+  fit2 <- glm(Income ~ Sex + Race, family = gaussian(link = identity), data = acs)
+  
+  fit3 <- glm(Income ~ Sex + Race + Education + Education11 + Education16, 
+              family = gaussian(link = identity), data = acs)
+  
+  fit4 <- glm(Income ~ Sex + Race + Education + Education11 + Education16 +
+              Age + Age_sq, family = gaussian(link = identity), data = acs)
+  
+  fit5 <- glm(Income ~ Sex + Race + Education + Education11 + Education16 +
+              Age + Age_sq + Managers, family = gaussian(link = identity), data = acs)
+
+```
+
+
+
+## Compare models
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  anova(fit1, fit5, test = "Chisq")
+
+```
+
+
+
+## Visualize models in tables
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  library("texreg")
+  screenreg(list(fit1,fit2,fit3))
+
+```
+
+
+
+## Use Packages to Automate Work: Spline Functions
+Breaks down independent variables into a small number of segments connected by knots.
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  library(splines)
+
+  fit6 <- glm(Income ~ Sex + Race + bs(Education,3) + poly(Age,2) + Managers, 
+              family = gaussian(link = identity), data = acs)
+  summary(fit6)
+
+
+```
+
+
+
+## Create plots
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  library(effects)
+
+  plot(effect("bs(Education,3)", fit6))
+  plot(effect("poly(Age,2)", fit6))
+  plot(effect("Sex", fit6))
+  plot(effect("Race", fit6))
+  
+  plot(allEffects(fit6, xlevels = 50))
+
+```
+
+
+
+# Generalized Additive Model
+Only assume variables are additive and not linear. More flexible regression models.
+## Create models and view summaries
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+library(mgcv)
+    fit_gam1 <- gam(Income ~ Sex + Race + Education + Age + Managers, data = acs)
+    summary(fit_gam1) 
+    
+    fit_gam2 <- gam(Income ~ Sex + Race + s(Education) + s(Age) + Managers, data = acs)
+    summary(fit_gam2)
+
+```
+
+
+
+## Plot
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  plot(fit_gam2, all.terms = TRUE)
+
+```
+
+
+
+# Logistic Regression
+Estimate regression models predicting a categorical outcome
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  # Recode "Managers" to create a binary dependent variable
+    acs <- acs  %>% mutate(manager = (as.numeric(fct_collapse(Managers,
+                               yes = c("Chief Executives", "Managers", "Supervisors"),
+                               no = "Other"))))
+
+  acs$manager[acs$manager == 2] <- 0
+
+
+```
+
+
+
+## GLM
+### View summary
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  fit7 <- glm(manager ~ Sex + Race + bs(Education,3) + bs(Age,3), 
+            family = binomial(), data = acs)
+  summary(fit7)
+
+```
+
+### Plot
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  plot(allEffects(fit7, xlevels = 50))
+  plot(effect("bs(Education,3)", fit7))
+  plot(effect("Sex", fit7))
+  plot(effect("Race", fit7))
+
+```
+
+
+
+## GAM
+### View summary
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  fit_gam3 <- gam(manager ~ Sex + Race + s(Education) + s(Age), data = acs)
+  summary(fit_gam3)
+
+```
+
+### Plot
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  plot(fit_gam3, all.terms = TRUE)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
