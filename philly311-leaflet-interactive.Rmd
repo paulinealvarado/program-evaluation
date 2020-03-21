@@ -1,0 +1,103 @@
+---
+title: "Working with Leaflet: Philly 311 Data)"
+author: "Pauline I. Alvarado"
+date: "Spring 2018"
+output: pdf_document
+---
+
+This coding exercise was from the Program Evaluation and Data Analysis course taught by Dr. Nelson Lim at the University of Pennsylvania. Data was provided by the instructor.
+
+# Geocode Data
+## Load packages and data
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+  
+  # Packages
+    library(leaflet)
+
+  # Read data
+    load("clean311.rda")
+  
+  # View column names
+    names(mydata)
+
+```
+
+
+
+## Get quick facts on the data
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  summary(mydata)
+
+```
+
+
+
+## Take random sample and create a complete address
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  # Random sample
+    set.seed(31) # other people can get the same random sample
+    mysample <- mydata[sample(1:nrow(mydata), 100, replace = FALSE),]
+    
+  # Combine multiple columns to create a complete address
+    paste(mysample$Address, ",", mysample$Zipcode)
+    mysample$addressclean <- paste(mysample$Address, "Philadelphia, PA,", mysample$Zipcode)
+    
+
+```
+
+
+
+## Geocode & save
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  # mysample$coordinates <- geocode(mysample$addressclean, source = "dsk")
+  # save(mysample, file="mysamplegeocoded.rda")
+
+```
+
+
+
+# Leaflet & interactive maps
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+  
+  load("mysamplegeocoded.rda")
+
+  # assign colors depending on status
+    pal <- colorFactor(c("navy", "red"), domain = c("Closed", "Open"))
+    labs <- c("Closed", "Open")
+    col <- c("navy", "red")
+
+  map <- leaflet() %>% 
+          # control the view
+            setView(lng = -75.1652, lat = 39.9526, zoom = 11) %>%
+      
+          # commonly used map
+            addTiles('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png') %>%
+    
+          # format map
+            addCircleMarkers(~coordinates$lon, ~coordinates$lat, data = mysample, 
+                              color = ~pal(Status), # color
+                              radius = 4, # size of circle
+                              weight = 1, # higher numbers will make it larger, vice ver
+                              fillOpacity = 0.6,
+                              popup = paste("Location of Call:", mysample$address, "<br>",
+                                     "Status:", mysample$Status, "<br>",
+                                     "Agency Reponsible", mysample$Agency.Responsible)) %>% # modify popup
+      
+          # add legend
+            addLegend("bottomright", colors= col, labels= labs, title="Call Status")
+  
+  # map
+```
+
+
+
+# Export as interactive map in html
+```{r message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+  
+  # library(htmlwidgets)
+  # saveWidget(map, file="311-leaflet-interactive.html", selfcontained = TRUE)
+
+```
