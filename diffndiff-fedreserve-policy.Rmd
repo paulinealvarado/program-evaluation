@@ -1,0 +1,138 @@
+---
+title: "Difference-in-Difference Design: Effect of Federal Reserve Monetary Policy on Banking System"
+author: "Pauline I. Alvarado"
+date: "Fall 2017"
+output: pdf_document
+---
+
+This coding exercise was from the Statistics for Public Policy course taught by Dr. Matthew Levendusky at the University of Pennsylvania. Data was provided by the instructor and taken from Gary Richardson and William Troost's 2009 Journal of Political Economy article.
+
+# Background
+After 1929 Stock Market Crash, Caldwell banks in Mississippi were located within two different Federal Reserve Districts, 6th and 8th. 6th district lent money to keep banks afloat, but 8th did not offer any aid.
+
+
+
+# Calculate difference-indifference estimate
+Lending policy in 6th district saved 19 additional banks
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+  
+  # Load data and packages
+    library(readstata13)
+    failure <- read.dta13(file = "bank_diff_in_diff.dta")
+    attach(failure)
+    
+  # View data
+    failure
+    
+  # Difference-in-difference estimator (use 1929 and 1930)
+    (121-135) - (132-165)
+    
+
+```
+
+
+
+# Parallel Trends Analysis
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  plot(x = year,
+       y = bib8,
+       type = "b",
+       pch = 19, 
+       col = "black", 
+       xlab = "Year",
+       ylab = "Number of Banks in Business", 
+       ylim = c(90,180),
+       main = "Parallel Trends Analysis")
+
+  points(x = year, y = bib6, col = "red", pch = 21)
+
+  lines(x = year, y = bib6, col = "red")
+
+  legend(x = 1932, 
+         y = 170,
+         legend = c("8th District","6th District"),
+         pch = c(19,21),
+         col = c("black","red"))
+
+
+```
+
+
+
+# Add counter-factual 6th district on the graph
+If there was no Federal Reserve intervention
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  # Calculate counte-factual
+    diff <- bib8 - bib6
+    counter.fact <- ifelse(year == 1929, bib6, bib8 - diff[year == 1930])
+    
+    
+  plot(x = failure$year,
+       y = failure$bib8,
+       type = "b",
+       pch = 19, 
+       col = "black", 
+       xlab = "Year",
+       ylab = "Number of Banks in Business", 
+       ylim = c(75,180),
+       main = "Counter-Factual Trends Analysis")
+
+  points(x = year, y = bib6, col = "red", pch = 21)
+  lines(x = year, y = bib6, col = "red")
+
+  points(x = year, y = counter.fact, col = "blue", pch = 23)
+  lines(x = year, y = counter.fact, col = "blue", lty = 2)
+  
+  legend(x = 1932, 
+         y = 170,
+         legend = c("8th District","6th District", "Counter-Factual 6th District"),
+         pch = c(19,21, 23),
+         col = c("black","red", "blue"))
+
+
+```
+
+
+
+
+# Run regression with interactions terms
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  bank.fit <- read.dta13(file = "did_bank_reg.dta")
+
+  summary(lm(banks ~ treat * post, bank.fit))
+
+
+```
+
+
+
+# Interpret coefficients and interaction terms
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  # Number of banks in district 8, pre-1931 
+    167
+
+  # Number of banks in district 6, pre-1931: 
+    167 - 29
+
+  # Number of banks in district 8, post-1931: 
+    167 - 49
+
+  # Number of banks in district 6, post-1931: 
+    167 - 29 - 49 + 20.5
+
+```
+
+
+
+
+
+
+
+
+
+
+
