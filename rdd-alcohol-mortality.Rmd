@@ -1,0 +1,60 @@
+---
+title: "Regression Discontinuity Design: Effect of Legal Minimum Drinking Age on Mortality"
+author: "Pauline I. Alvarado"
+date: "Fall 2017"
+output: pdf_document
+---
+
+This coding exercise was from the Statistics for Public Policy course taught by Dr. Matthew Levendusky at the University of Pennsylvania. Data was provided by the instructor and taken from Christopher Carpenter and Carlos Dobkin's American Economics Journal article in 2009.
+
+# Load packages and data
+Key variables are "all" (number of people who die in a given month in a given age group) and "agecell" (age of the given group).
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+  
+  library(readstata13)
+  alcohol <- read.dta13(file = "rdd_alcohol_data.dta")
+  
+  # View variables
+    summary(alcohol)
+
+```
+
+
+
+# Reformat Variables 
+Age range: 19.07-22.93 years old
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  alcohol$age <- alcohol$agecell - 21 # how many years before / after legal age
+
+  alcohol$over21 <- ifelse(alcohol$agecell >= 21, 1, 0) # forcing/dummy variable
+
+```
+
+
+
+# Create linear model
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  summary(lm(all ~ age + over21, alcohol))
+
+```
+
+
+# RDD plot: Legal Age & Mortality
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  library(rdrobust)
+
+  rdplot(y = alcohol$all,
+         x = alcohol$agecell,
+         c = 21,
+         n = dim(alcohol) [1],
+         p = 1, 
+         x.label = "Age",
+         y.label = "Fatalities per 100,000",
+         y.lim = c(85, 110),
+         title = "Legal Drinking Age & Mortality")
+
+```
+
