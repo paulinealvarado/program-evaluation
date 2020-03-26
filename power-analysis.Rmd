@@ -1,0 +1,106 @@
+---
+title: "Power Analysis"
+author: "Pauline I. Alvarado"
+date: "Fall 2017"
+output: pdf_document
+---
+
+This coding exercise was from the Statistics for Public Policy course taught by Dr. Matthew Levendusky at the University of Pennsylvania. Data was provided by the instructor.
+
+# Definition
+Probability to conclude that there is an effect to be found. In the real world, power analysis can help decide if the study is worth conducting. 1-power is the probability of a type II error (don't find an effect when there is an effect to found, e.g. pregnant lady getting a negative pregnancy test).
+
+# Power.t.test() function
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+  
+  # power.t.test(n = NULL, 
+               # delta = NULL, 
+               # sd = 1, 
+               # sig.level = 0.05,
+               # power = NULL,
+               # type = c("two.sample", "one.sample", "paired"),
+               # alternative = c("two.sided", "one.sided"))
+
+```
+
+
+
+# Problem 1a
+Average 3rd grader scores 65/100 on a reading test, with a standard deviation of 12 points. An after-school tutoring program claims to boost test socres by 5 points on average. If a pilot program of n = 10 students is conducted, what is the progability of a type-II error (alpha = 0.05 and H0: mu = 0 vs HA: mu > 0).
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  power.t.test(n = 10, 
+               delta = 5, 
+               sd = 12, 
+               sig.level = 0.05,
+               power = NULL,
+               type = "one.sample",
+               alternative = "one.sided")
+
+  # probability of a type-II error
+    1 - 0.33501
+
+```
+
+
+
+# Problem 1b
+Increase sample size
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+ power.t.test(n = 50, 
+               delta = 5, 
+               sd = 12, 
+               sig.level = 0.05,
+               power = NULL,
+               type = "one.sample",
+               alternative = "one.sided")
+
+  # probability of a type-II error
+    1 - 0.8962296
+    
+
+```
+
+
+
+# Problem 1c
+In order to get the standard 0.80 power, how many students should be enrolled in the pilot?
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+
+  power.t.test(n = NULL, 
+               delta = 5, 
+               sd = 12, 
+               sig.level = 0.05,
+               power = 0.80,
+               type = "one.sample",
+               alternative = "one.sided")
+
+
+```
+
+
+
+# Problem 2
+Nonprofit program that mentors youths claims that youth spend less than 30 minutes a day doing risky activities. Evaluation study measures how many minutes per day the kids (n = 40) spend doing "risky activities." The average is 25 minutes per day on risky activities with a std deviation of 12 minutes.
+```{r echo=TRUE, message=FALSE, warning=FALSE, paged.print=TRUE, results='hold'}
+  
+  # Hypothesis:
+    # H0: 30
+    # HA: 25
+    
+  # What is the power?
+    power.t.test(n = 40, 
+               delta = 5, 
+               sd = 12, 
+               sig.level = 0.05,
+               power = NULL,
+               type = "one.sample",
+               alternative = "two.sided")
+
+    
+  # Probability of a type II error.
+    1 - 0.7290392
+    
+```
+
